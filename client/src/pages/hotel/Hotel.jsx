@@ -13,15 +13,15 @@ import {
 import { useState } from "react";
 import useFetch from "../../hooks/useFetch";
 import { useLocation } from "react-router-dom";
+import { useContext } from "react";
+import { SearchContext } from "../../context/SearchContext";
 
 const Hotel = () => {
   const location = useLocation()
   const id = location.pathname.split('/')[2]
   const [slideNumber, setSlideNumber] = useState(0);
   const [open, setOpen] = useState(false);
-  const { data, loading, error,reFetch } = useFetch(`http://localhost:5000/api/hotels/find/${id}`)
-  console.log(data);
-
+  const { data, loading, error, reFetch } = useFetch(`http://localhost:5000/api/hotels/find/${id}`)
   const photos = [
     {
       src: "https://cf.bstatic.com/xdata/images/hotel/max1280x900/261707778.jpg?k=56ba0babbcbbfeb3d3e911728831dcbc390ed2cb16c51d88159f82bf751d04c6&o=&hp=1",
@@ -50,16 +50,24 @@ const Hotel = () => {
 
   const handleMove = (direction) => {
     let newSlideNumber;
-
     if (direction === "l") {
       newSlideNumber = slideNumber === 0 ? 5 : slideNumber - 1;
     } else {
       newSlideNumber = slideNumber === 5 ? 0 : slideNumber + 1;
     }
-
     setSlideNumber(newSlideNumber)
   };
 
+  const { dates, options } = useContext(SearchContext)
+  const MILLISECOND_PER_DAY = 1000 * 60 * 60 * 24
+  function dayDifference (date1, date2){
+    const timeDiff = Math.abs(date2?.getTime() - date1?.getTime())
+    const diffDay = Math.ceil(timeDiff / MILLISECOND_PER_DAY)
+    return diffDay
+  }
+  console.log(dates,options?.room);
+  const days = dayDifference(dates[0]?.endDate , dates[0]?.startDate);
+  console.log(days);
   return (
     <div>
       <Navbar />
@@ -130,13 +138,13 @@ const Hotel = () => {
               </p>
             </div>
             <div className="hotelDetailsPrice">
-              <h1>Perfect for a 9-night stay!</h1>
+              <h1>Perfect for a {days ||0 }-night stay!</h1>
               <span>
                 Located in the real heart of Krakow, this property has an
                 excellent location score of 9.8!
               </span>
               <h2>
-                <b>$945</b> (9 nights)
+                <b>${days * data?.cheapestPrice * options?.room || 0}</b> ({days || 0} nights)
               </h2>
               <button>Reserve or Book Now!</button>
             </div>
